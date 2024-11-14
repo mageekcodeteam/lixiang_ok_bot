@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="back-btn-container">
+    <a href="{{ url_for('delete_support', support_id=messages[0].support_chat) }}" class="back-btn">Удалить чат</a>
+    <a href="{{ url_for('messages_for_advertising')}}" class="back-btn">Назад</a>
+  </div>
+<section class="msger">
+    <header class="msger-header">
+        <div class="msger-header-title">
+            <a href="{{ url_for('user_info', user_id=user_id) }}">@{{username}}
+             ({{user_id}})</a>
+        </div>
+    </header>
+
+    <main class="msger-chat" id="chat">
+       
+        {% for message in messages %}
+            {% if message.role == 'user'%}
+                <div class="msg left-msg">
+                    <div class="msg-bubble">
+                        <div class="msg-info">
+                            <div class="msg-info-name"><a href="{{ url_for('user_info', user_id=user_id) }}">@{{username}}</a></div>
+                            <div class="msg-info-time"> {{ message.timestamp.strftime('%H:%M | %d.%m.%Y') }} </div>
+                        </div>
+                        <div class="msg-text">
+                           {{ message.message | linkify }}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+
+                <div class="msg right-msg">
+                    <div class="msg-bubble">
+                        <div class="msg-info">
+                            <div class="msg-info-name">Администратор</div>
+                            <div class="msg-info-time"> {{ message.timestamp.strftime('%H:%M | %d.%m.%Y') }} </div>
+                        </div>
+                        <div class="msg-text">
+                        {{ message.message }}
+                        </div>
+                    </div>
+                </div>
+
+            {% endif %}
+
+
+        {% endfor %}
+
+    </main>
+    <form action="{{ url_for('admin_response', support_id=messages[0].support_chat)}}" method="post" enctype="multipart/form-data" class="msger-inputarea" data-user-id="">
+        <input type="text" name="message_output" class="msger-input" placeholder="Введите ваше сообщение...">
+        <button type="submit" class="msger-send-btn">Отправить</button>
+    </form>
+</section>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chat = document.getElementById("chat");
+        chat.scrollTop = chat.scrollHeight;
+    });
+</script>
+{% endblock %}

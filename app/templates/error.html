@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="alert" role="alert">
+                {% if error_code == 404 %}
+
+                    <h4 class="alert-heading">Страница не найдена!</h4>
+                    <p>Извините, но запрашиваемая страница не существует. Пожалуйста, проверьте URL и попробуйте снова.</p>
+                    <hr>
+
+                {% elif error_code == 500 %}
+
+                    <h4 class="alert-heading">Внутренняя ошибка сервера!</h4>
+                    <p>Произошла ошибка на сервере.</p>
+                    <hr>
+
+                {% elif error_code == 400 %}
+
+                    <h4 class="alert-heading">Неверный запрос!</h4>
+                    <p>Ваш запрос содержит ошибку. Пожалуйста, проверьте введенные данные и попробуйте снова.</p>
+                    <hr>
+
+                {% else %}
+
+                    <h4 class="alert-heading">Произошла ошибка!</h4>
+                    <p>К сожалению, что-то пошло не так.</p> 
+                    <hr>
+
+                {% endif %}
+            <p class="mb-0"><a href="{{ url_for('index') }}" class="action-button-exit">Вернуться на главную</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

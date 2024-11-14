@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Авторизация</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-bg">
+        <form id="login" action="{{ url_for('login') }}" method="post">
+          <p><label for="username">Логин</label></p>
+          <p>
+            <input type="text" id="username" name="username" required /><br />
+          </p>
+          <p><label for="password">Пароль</label></p>
+          <p>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+            /><br />
+          </p>
+          <p><button class="send-btn" type="submit">Войти</button></p>
+          <div id="notification" class="notification"></div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function showNotification(message) {
+        const notification = document.getElementById("notification");
+        notification.textContent = message;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 3000);
+      }
+
+      function clearForm(form) {
+        form.reset();
+        const textareas = form.querySelectorAll("textarea");
+        textareas.forEach((textarea) => {
+          textarea.style.height = "auto";
+        });
+      }
+
+      document
+        .getElementById("login")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(this);
+          fetch('{{ url_for("login") }}', {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => {
+              if (response.status === 401) {
+                return response.json().then((data) => {
+                  showNotification(data.error);
+                  clearForm(this);
+                });
+              } else if (response.ok) {
+                window.location.href = '{{ url_for("index") }}';
+              }
+            })
+            .catch((error) => {
+              console.error("Ошибка:", error);
+              showNotification("Произошла ошибка при попытке войти.");
+            });
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,216 @@
+{% extends "base.html" %} {% block content %}
+<h2 class="mb-4 text-center">Статистика</h2>
+<div class="row row-cols-1 row-cols-lg-3 px-lg-5 gy-1 gx-4 d-flex justify-content-center align-items-center mb-1"
+  style="margin-right: 0px">
+  <div class="col">
+    <div class="card mb-3 h-80 card-resize p-3">
+      <div class="card-icon">
+        <i class="fa-solid fa-users m-auto"></i>
+      </div>
+      <div class="card-info">
+        <div class="d-flex align-items-center m-auto">
+          <p class="card-text text-muted fs-3 fw-bold">{{ active }}</p>
+        </div>
+      </div>
+      <div class="card-title text-center">Пользователей</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card mb-3 h-80 card-resize p-3">
+      <div class="card-icon">
+        <i class="fa-solid fa-users-slash m-auto"></i>
+      </div>
+      <div class="card-info">
+        <div class="d-flex align-items-center m-auto">
+          <p class="card-text text-muted fs-3 fw-bold">{{ blocked }}</p>
+        </div>
+      </div>
+      <div class="card-title text-center">Заблокированых</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card mb-3 h-80 card-resize p-3">
+      <div class="card-icon">
+        <i class="fa-solid fa-user-lock m-auto"></i>
+      </div>
+      <div class="card-info">
+        <div class="d-flex align-items-center m-auto">
+          <p class="card-text text-muted fs-3 fw-bold">{{ muted }}</p>
+        </div>
+      </div>
+      <div class="card-title text-center">В муте</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card mb-3 h-80 card-resize p-3">
+      <div class="card-icon">
+        <i class="fas fa-envelope"></i>
+      </div>
+      <div class="card-info">
+        <div class="d-flex align-items-center m-auto">
+          <p class="card-text text-muted fs-3 fw-bold">{{ statistics.one_day }}</p>
+        </div>
+      </div>
+      <div class="card-title text-center">За сегодня</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card mb-3 h-80 card-resize p-3">
+      <div class="card-icon">
+        <i class="fas fa-calendar-week"></i>
+      </div>
+      <div class="card-info">
+        <div class="d-flex align-items-center m-auto">
+          <p class="card-text text-muted fs-3 fw-bold">{{ statistics.seven_day }}</p>
+        </div>
+      </div>
+      <div class="card-title text-center">За 7 дней</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card mb-3 h-80 card-resize p-3">
+      <div class="card-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="card-info">
+        <div class="d-flex align-items-center m-auto">
+          <p class="card-text text-muted fs-3 fw-bold">{{ statistics.thirty_day }}</p>
+        </div>
+      </div>
+      <div class="card-title text-center">За 30 дней</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="row justify-content-center mt-2">
+  <h2 class="mb-4 text-center">Список пользователей</h2>
+
+  <form id="search-form" method="get" action="{{ url_for('index') }}" class="mb-4">
+    <div class="input-group mb-3">
+      <input type="text" id="search-input" class="form-control" name="search"
+             placeholder="Поиск по имени пользователя, user id или дате"
+             value="{{ request.args.get('search', '') }}" />
+    </div>
+    <div class="input-group">
+      <select id="status-select" class="form-select" name="status">
+        <option value="">Все статусы</option>
+        <option value="Активный" {% if request.args.get('status') == 'Активный' %}selected{% endif %}>Активный</option>
+        <option value="В муте" {% if request.args.get('status') == 'В муте' %}selected{% endif %}>В муте</option>
+        <option value="Заблокирован" {% if request.args.get('status') == 'Заблокирован' %}selected{% endif %}>Заблокирован</option>
+      </select>
+    </div>
+  </form>
+  <div class="table-responsive">
+    <table class="table table-bordered text-center">
+      <thead class="thead-dark">
+        <tr>
+          <th>№</th>
+          <th>User ID</th>
+          <th>Username</th>
+          <th>Статус</th>
+          <th id="last-activity-header" data-sort-order="" style="cursor: pointer">
+            Последняя активность
+            <span>&uarr;</span>
+
+          </th>
+        </tr>
+      </thead>
+
+      <tbody id="users-table-body">
+        {% for user in users %}
+        <tr onclick="window.location='{{ url_for('user_info', user_id=user.user_id) }}';" style="cursor: pointer;">
+          <td>{{ loop.index }}</td>
+          <td>{{ user.user_id }}</td>
+          <td>@{{ user.username }}</td>
+          <td>{{ user.status }}</td>
+          <td>{{ user.last_activity }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("search-input");
+    const tableBody = document.getElementById("users-table-body");
+    const lastActivityHeader = document.getElementById("last-activity-header");
+
+    let debounceTimeout;
+    let arrowUpdateTimeout;
+
+    function debounce(func, delay) {
+      return function (...args) {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+    async function performSearch(query, sort) {
+      try {
+        const response = await fetch(
+          `{{ url_for('index') }}?search=${encodeURIComponent(query)}&sort=${sort}`
+        );
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/html");
+        const newTableBody = doc.getElementById("users-table-body");
+        tableBody.innerHTML = newTableBody.innerHTML;
+      } catch (error) {
+        console.error("Ошибка поиска или сортировки:", error);
+      }
+    }
+
+    function updateArrow(newSort) {
+      if (newSort === "asc") {
+        lastActivityHeader.innerHTML =
+          "Последняя активность <span>&uarr;</span>";
+      } else {
+        lastActivityHeader.innerHTML =
+          "Последняя активность <span>&darr;</span>";
+      }
+    }
+
+    searchInput.addEventListener(
+      "input",
+      debounce(function () {
+        const sort =
+          lastActivityHeader.getAttribute("data-sort-order") || "desc";
+        performSearch(searchInput.value, sort);
+      }, 300)
+    );
+
+    lastActivityHeader.addEventListener("click", function () {
+      clearTimeout(arrowUpdateTimeout);
+      const currentSort = lastActivityHeader.getAttribute("data-sort-order");
+      const newSort = currentSort === "asc" ? "desc" : "asc";
+      lastActivityHeader.setAttribute("data-sort-order", newSort);
+
+      // Delay arrow update
+      arrowUpdateTimeout = setTimeout(function () {
+        updateArrow(newSort);
+      }, 300);
+
+      performSearch(searchInput.value, newSort);
+    });
+
+    // Initial arrow update
+    const initialSort = lastActivityHeader.getAttribute("data-sort-order");
+    updateArrow(initialSort);
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const statusSelect = document.getElementById("status-select");
+    
+    statusSelect.addEventListener("change", function () {
+      document.getElementById("search-form").submit();
+    });
+  });
+</script>
+
+{% endblock %}

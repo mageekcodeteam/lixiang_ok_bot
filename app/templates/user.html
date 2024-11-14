@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="post">
+  <div class="form-group mt-4">
+    <label for="username">Имя пользователя</label>
+    <input type="text" class="form-control" id="username" value="@{{ user.username }}" readonly />
+  </div>
+
+  <div class="form-group mt-4">
+    <label for="user_id">ID пользователя</label>
+    <input type="text" class="form-control" id="user_id" value="{{ user.user_id }}" readonly />
+  </div>
+
+  <div class="form-group mt-4">
+    <label for="words">Сообщений всего </label>
+    <input type="text" class="form-control" id="words" value="{{ user.number_of_messages }}" readonly />
+  </div>
+
+  <div class="form-group mt-4">
+    <label for="last_activity">Последняя активность</label>
+    <input type="text" class="form-control" id="last_activity" value="{{ user.last_activity }}" readonly />
+  </div>
+
+  <div class="form-group mt-4">
+    <label for="status">Статус</label>
+    <input type="text" class="form-control" id="status" value="{{ user.status }}" readonly />
+  </div>
+
+  <div class="form-group mt-4">
+    <label for="warnings">Предупреждений</label>
+    <input type="number" class="form-control" id="warnings" name="warnings" value="{{ user.warnings }}" min="0" />
+  </div>
+
+  <div class="action-container">
+    <button type="submit" class="action-button mt-4">Сохранить</button>
+    <hr>
+  </div>
+
+</form>
+
+{% if messages %}
+  <div class="table-responsive">
+    <table class="table table-bordered text-center">
+      <thead class="thead-dark">
+        <tr>
+          <th>№</th>
+          <th>Сообщение</th>
+        </tr>
+      </thead>
+
+      <tbody id="users-table-body">
+        {% for message in messages %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ message.message }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+
+<div class="btn-group-vertical" role="group" aria-label="User actions">
+  {% if user.status == "Активный" or user.status == "В муте" %}
+  <form method="post" action="{{ url_for('block_user', user_id=user.user_id) }}" class="mb-3">
+    <div class="input-group">
+      <button type="submit" class="action-button btn btn-danger w-50" style="max-width: 200px;">Заблокировать</button>
+      <input type="number" class="form-control w-50" id="block_duration" name="block_duration"
+        placeholder="Время блокировки (Часы)" min="0" />
+    </div>
+  </form>
+  {% else %}
+  <form method="post" action="{{ url_for('unblock_user', user_id=user.user_id) }}" class="mb-3">
+    <div class="w-100">
+      <button type="submit" class="action-button btn btn-success w-100">Разблокировать</button>
+    </div>
+  </form>
+  {% endif %}
+
+  {% if user.status == "Активный" %}
+  <form method="post" action="{{ url_for('mute_user', user_id=user.user_id) }}" class="mb-3">
+    <div class="input-group">
+      <button type="submit" class="action-button btn btn-warning w-50" style="max-width: 200px;">Замутить</button>
+      <input type="number" class="form-control w-50" id="mute_duration" name="mute_duration"
+        placeholder="Время мута (Часы)" min="0" />
+    </div>
+  </form>
+  {% endif %}
+
+  {% if user.status == "В муте" %}
+  <form method="post" action="{{ url_for('unmute_user', user_id=user.user_id) }}" class="mb-3">
+    <div class="w-100">
+      <button type="submit" class="action-button btn btn-info w-100">Размутить</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+
+
+
+
+
+{% endblock %}
